@@ -34,6 +34,8 @@ class Application:
         self.builder.get_object('Entry_2').insert(0,root.filename) #.insert(0,variable)
         in_file = root.filename
 
+
+
     def start_pr(self):
         my_file = self.builder.get_object('Entry_2').get()
         with open(my_file, 'r', encoding='utf-8') as read_file:
