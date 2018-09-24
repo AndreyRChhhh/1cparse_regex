@@ -4,6 +4,9 @@ from tkinter import messagebox
 import pygubu
 import os
 
+os.environ['TCL_LIBRARY'] = os.getcwd()+r'\lib\tcl8.6'
+os.environ['TK_LIBRARY'] = os.getcwd()+r'\lib\tk8.6'
+
 
 def callback():
     root.filename = filedialog.askopenfilename(initialdir="/", title="Select file",

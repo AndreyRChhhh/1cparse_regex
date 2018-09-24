@@ -11,8 +11,8 @@ options = {
         'packages':packages,
     },
 }
-os.environ['TCL_LIBRARY'] = r'C:\Users\rurusa\AppData\Local\Programs\Python\Python35\tcl\tcl8.6'
-os.environ['TK_LIBRARY'] = r'C:\Users\rurusa\AppData\Local\Programs\Python\Python35\tcl\tk8.6'
+os.environ['TCL_LIBRARY'] = os.getcwd()+r'\lib\tcl8.6'
+os.environ['TK_LIBRARY'] = os.getcwd()+r'\lib\tk8.6'
 
 setup(
     name = "<any name>",
