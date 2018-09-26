@@ -9,9 +9,10 @@ import os
 os.environ['TCL_LIBRARY'] = os.getcwd()+r'\lib\tcl8.6'
 os.environ['TK_LIBRARY'] = os.getcwd()+r'\lib\tk8.6'
 
+# Get .exe with: pyinstaller --hidden-import pygubu.builder.ttkstdwidgets --onefile main.py
+# or with: nuitka --exe --standalone --explain-imports --recurse-directory=C:\YOURPATH\Python\Python35\Lib\
+#                                                           site-packages/pygubu --show-progress --standalone main.py
 
-# Get .exe with: pyinstaller --onefile main.py
-# or with: nuitka --exe --standalone --explain-imports --recurse-directory=C:\YOURPATH\Python\Python35\Lib\site-packages/pygubu --show-progress --standalone main.py
 
 def callback():
     root.filename = filedialog.askopenfilename(initialdir="/", title="Select file",
@@ -61,16 +62,16 @@ class Application:
                 regex1 = r"ДатаНачала=(.*?)\nДатаКонца="
                 dirname = re.search(regex1, fulltext, re.DOTALL | re.UNICODE)
         except:
-            messagebox.showinfo("", "Файл не подходит")
+                messagebox.showinfo("", "Файл не подходит")
 
         else:
             count = 0
-
             if not os.path.exists(dirname.group(1)):
                 os.mkdir(dirname.group(1), mode=0o777)
-
+            shet_count=0
             for line in rashshet:
-                f = open(os.getcwd()+r'\\'+dirname.group(1)+"\\"+line + ".txt", 'w')
+                shet_count+=1
+                f = open(os.getcwd() + r'\\' + dirname.group(1) + "\\" + line + ".txt", 'w')
                 f.write(startfilet.group(0))
                 f.write(line)
                 if line in section[count]:
@@ -78,16 +79,23 @@ class Application:
                     f.write(section[count])
                     f.write("КонецРасчСчет")
                 count += 1
-                if document:
-                    if line in document[count]:
-                        f.write("\nСекцияДокумент=")
-                        f.write(document[count])
-                        f.write("КонецДокумента")
-                    f.write("\nКонецФайла")
-                else:
-                    messagebox.showwarning("", "Отсутсвуют изменения для всех счетов")
-            messagebox.showinfo("","Файлы помещены в: "+os.getcwd()+"\\"+dirname.group(1) )
 
+            doc_count = 0
+            for doc in document:
+                doc_count += 1
+                for line in rashshet:
+                    search_in_doc = re.search(line, doc, re.DOTALL | re.UNICODE)
+                    if search_in_doc:
+                        f = open(os.getcwd() + r'\\' + dirname.group(1) + "\\" + line + ".txt", 'a')
+                        f.write("\nСекцияДокумент=")
+                        f.write(doc)
+                        f.write("КонецДокумента")
+            for line in rashshet:
+                f = open(os.getcwd() + r'\\' + dirname.group(1) + "\\" + line + ".txt", 'a')
+                f.write("\nКонецФайла")
+
+            messagebox.showinfo("", "Файлы помещены в: " + os.getcwd() + "\\" + dirname.group(1) + "\nВ файле найдено "
+                                + str(doc_count) + " документов" + "\nОбработано счетов: " + str(shet_count))
 
 if __name__ == '__main__':
     root = Tk()
