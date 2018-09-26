@@ -2,11 +2,16 @@ from tkinter import *
 from tkinter import filedialog
 from tkinter import messagebox
 import pygubu
+import win32gui, win32con
 import os
+
 
 os.environ['TCL_LIBRARY'] = os.getcwd()+r'\lib\tcl8.6'
 os.environ['TK_LIBRARY'] = os.getcwd()+r'\lib\tk8.6'
 
+
+# Get .exe with: pyinstaller --onefile main.py
+# or with: nuitka --exe --standalone --explain-imports --recurse-directory=C:\YOURPATH\Python\Python35\Lib\site-packages/pygubu --show-progress --standalone main.py
 
 def callback():
     root.filename = filedialog.askopenfilename(initialdir="/", title="Select file",
@@ -20,14 +25,13 @@ class Application:
         self.builder = builder = pygubu.Builder()
 
         # 2: Load an ui file
-        builder.add_from_file('test.ui')
+        builder.add_from_file('GUI_config.ui')
 
         # 3: Create the widget using a master as parent
         self.mainwindow = builder.get_object('LabelFrame_1', root)
         builder.connect_callbacks(self)
 
     def callback1(self):
-        # print ("click!")
         root.filename = filedialog.askopenfilename(initialdir="/", title="Select file",
                                                    filetypes=(("txt files", "*.txt"), ("all files", "*.*")))
         self.builder.get_object('Entry_2').delete(0,999)  # .insert(0,variable)
@@ -36,53 +40,67 @@ class Application:
 
     def start_pr(self):
         my_file = self.builder.get_object('Entry_2').get()
-        with open(my_file, 'r', encoding='cp1251') as read_file:
-            fulltext = read_file.read()
-            regex1 = r"РасчСчет=(.*?)СекцияРасчСчет"
-            result1 = re.search(regex1, fulltext, re.DOTALL | re.UNICODE)
+        try:
+            with open(my_file, 'r', encoding='cp1251') as read_file:
+                fulltext = read_file.read()
+                regex1 = r"РасчСчет=(.*?)СекцияРасчСчет"
+                result1 = re.search(regex1, fulltext, re.DOTALL | re.UNICODE)
 
-            regex1 = r"\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d"
-            rashshet = re.findall(regex1, result1.group(1), re.DOTALL | re.UNICODE)
+                regex1 = r"\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d"
+                rashshet = re.findall(regex1, result1.group(1), re.DOTALL | re.UNICODE)
 
-            regex1 = r"1CClientBankExchange(.*?)РасчСчет="
-            startfilet = re.search(regex1, fulltext, re.DOTALL | re.UNICODE)
+                regex1 = r"1CClientBankExchange(.*?)РасчСчет="
+                startfilet = re.search(regex1, fulltext, re.DOTALL | re.UNICODE)
 
-            regex1 = r"СекцияРасчСчет(.*?)КонецРасчСчет"
-            section = re.findall(regex1, fulltext, re.DOTALL | re.UNICODE)
+                regex1 = r"СекцияРасчСчет(.*?)КонецРасчСчет"
+                section = re.findall(regex1, fulltext, re.DOTALL | re.UNICODE)
 
-            regex1 = r"СекцияДокумент=(.*?)КонецДокумента"
-            document = re.findall(regex1, fulltext, re.DOTALL | re.UNICODE)
+                regex1 = r"СекцияДокумент=(.*?)КонецДокумента"
+                document = re.findall(regex1, fulltext, re.DOTALL | re.UNICODE)
 
-            regex1 = r"ДатаНачала=(.*?)\nДатаКонца="
-            dirname = re.search(regex1, fulltext, re.DOTALL | re.UNICODE)
-            print(dirname.group(1))
-        count = 0
+                regex1 = r"ДатаНачала=(.*?)\nДатаКонца="
+                dirname = re.search(regex1, fulltext, re.DOTALL | re.UNICODE)
+        except:
+            messagebox.showinfo("", "Файл не подходит")
 
-        if not os.path.exists(dirname.group(1)):
-            # os.makedirs(directory)
-            os.mkdir(dirname.group(1), mode=0o777)
+        else:
+            count = 0
 
-        for line in rashshet:
-            f = open(os.getcwd()+r'\\'+dirname.group(1)+"\\"+line + ".txt", 'w')
-            f.write(startfilet.group(0))
-            f.write(line)
-            if line in section[count]:
-                f.write("\nСекцияРасчСчет")
-                f.write(section[count])
-                f.write("КонецРасчСчет")
-            count += 1
-            if line in document[count]:
-                f.write("\nСекцияДокумент=")
-                f.write(document[count])
-                f.write("КонецДокумента")
-            f.write("\nКонецФайла")
-            # print("debug:")
-            # print (document)
-        messagebox.showinfo("","Файлы помещены в: "+os.getcwd()+"\\"+dirname.group(1) )
+            if not os.path.exists(dirname.group(1)):
+                os.mkdir(dirname.group(1), mode=0o777)
+
+            for line in rashshet:
+                f = open(os.getcwd()+r'\\'+dirname.group(1)+"\\"+line + ".txt", 'w')
+                f.write(startfilet.group(0))
+                f.write(line)
+                if line in section[count]:
+                    f.write("\nСекцияРасчСчет")
+                    f.write(section[count])
+                    f.write("КонецРасчСчет")
+                count += 1
+                if document:
+                    if line in document[count]:
+                        f.write("\nСекцияДокумент=")
+                        f.write(document[count])
+                        f.write("КонецДокумента")
+                    f.write("\nКонецФайла")
+                else:
+                    messagebox.showwarning("", "Отсутсвуют изменения для всех счетов")
+            messagebox.showinfo("","Файлы помещены в: "+os.getcwd()+"\\"+dirname.group(1) )
 
 
 if __name__ == '__main__':
     root = Tk()
+    root.withdraw()
+
     root.title("Парсер 1С выписок на Python")
+    frgrnd_wndw = win32gui.GetForegroundWindow();
+    wndw_title = win32gui.GetWindowText(frgrnd_wndw);
+    print(wndw_title)
+    if wndw_title.endswith("main.exe"):
+        win32gui.ShowWindow(frgrnd_wndw, win32con.SW_HIDE);
     app = Application(root)
+    root.geometry("329x133")
+    root.update()
+    root.deiconify()
     root.mainloop()
