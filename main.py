@@ -31,13 +31,22 @@ class Application:
         # 3: Create the widget using a master as parent
         self.mainwindow = builder.get_object('LabelFrame_1', root)
         builder.connect_callbacks(self)
+        save_dir = r"C:\\"
+        self.builder.get_object('Entry_save').delete(0,999)  # .insert(0,variable)
+        self.builder.get_object('Entry_save').insert(0,save_dir)  # .insert(0,variable)
 
     def callback1(self):
         root.filename = filedialog.askopenfilename(initialdir="/", title="Select file",
                                                    filetypes=(("txt files", "*.txt"), ("all files", "*.*")))
         self.builder.get_object('Entry_2').delete(0,999)  # .insert(0,variable)
         self.builder.get_object('Entry_2').insert(0,root.filename)  # .insert(0,variable)
-        in_file = root.filename
+        #in_file = root.filename
+
+    def save_path(self):
+        root.filename = filedialog.askdirectory(initialdir="/", title="Выберите папку")
+        self.builder.get_object('Entry_save').delete(0,999)  # .insert(0,variable)
+        self.builder.get_object('Entry_save').insert(0,root.filename)  # .insert(0,variable)
+        self.save_file = self.builder.get_object('Entry_save').get()
 
     def start_pr(self):
         my_file = self.builder.get_object('Entry_2').get()
@@ -66,12 +75,13 @@ class Application:
 
         else:
             count = 0
-            if not os.path.exists(dirname.group(1)):
-                os.mkdir(dirname.group(1), mode=0o777)
+            #if not os.path.exists(self.save_file + r'\\' + dirname.group(1)):
+            #    os.mkdir(self.save_file + r'\\' + dirname.group(1), mode=0o777)
             shet_count=0
             for line in rashshet:
                 shet_count+=1
-                f = open(os.getcwd() + r'\\' + dirname.group(1) + "\\" + line + ".txt", 'w')
+                f = open(self.save_file + r'\\' + "\\" + line + ".txt", 'w')
+                #f = open(self.save_file + r'\\' + dirname.group(1) + "\\" + line + ".txt", 'w')
                 f.write(startfilet.group(0))
                 f.write(line)
                 if line in section[count]:
@@ -86,29 +96,33 @@ class Application:
                 for line in rashshet:
                     search_in_doc = re.search(line, doc, re.DOTALL | re.UNICODE)
                     if search_in_doc:
-                        f = open(os.getcwd() + r'\\' + dirname.group(1) + "\\" + line + ".txt", 'a')
+                        f = open(self.save_file + r'\\' + "\\" + line + ".txt", 'a')
+                        #f = open(self.save_file + r'\\' + dirname.group(1) + "\\" + line + ".txt", 'a')
                         f.write("\nСекцияДокумент=")
                         f.write(doc)
                         f.write("КонецДокумента")
             for line in rashshet:
-                f = open(os.getcwd() + r'\\' + dirname.group(1) + "\\" + line + ".txt", 'a')
-                f.write("\nКонецФайла")
+                f = open(self.save_file + r'\\' + "\\" + line + ".txt", 'a')
+                #f = open(self.save_file + r'\\' + dirname.group(1) + "\\" + line + ".txt", 'a')
 
-            messagebox.showinfo("", "Файлы помещены в: " + os.getcwd() + "\\" + dirname.group(1) + "\nВ файле найдено "
+                f.write("\nКонецФайла")
+            #builder.get_object('Entry_2')
+            messagebox.showinfo("", "Файлы помещены в: " + self.save_file + "\nВ файле найдено "
                                 + str(doc_count) + " документов" + "\nОбработано счетов: " + str(shet_count))
+            # messagebox.showinfo("", "Файлы помещены в: " + os.getcwd() + "\\" + dirname.group(1) + "\nВ файле найдено "
+            #                    + str(doc_count) + " документов" + "\nОбработано счетов: " + str(shet_count))
 
 if __name__ == '__main__':
     root = Tk()
     root.withdraw()
-
     root.title("Парсер 1С выписок на Python")
-    frgrnd_wndw = win32gui.GetForegroundWindow();
-    wndw_title = win32gui.GetWindowText(frgrnd_wndw);
+    frgrnd_wndw = win32gui.GetForegroundWindow()
+    wndw_title = win32gui.GetWindowText(frgrnd_wndw)
     print(wndw_title)
     if wndw_title.endswith("main.exe"):
-        win32gui.ShowWindow(frgrnd_wndw, win32con.SW_HIDE);
+        win32gui.ShowWindow(frgrnd_wndw, win32con.SW_HIDE)
     app = Application(root)
-    root.geometry("329x133")
+    root.geometry("405x205")
     root.update()
     root.deiconify()
     root.mainloop()
